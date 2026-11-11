@@ -1,5 +1,5 @@
 const Footer = () => {
-  return <footer>版權文字</footer>;
+  return <footer className="footer">© 2026 好物選品店</footer>;
 };
 
 export default Footer;
