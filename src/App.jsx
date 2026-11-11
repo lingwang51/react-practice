@@ -1,143 +1,116 @@
-import { useState, useEffect } from "react";
-import "./App.css";
-import ProductCard from "./components/ProductCard";
+import { useState, useEffect, useRef } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import RefDemo from "./components/RefDemo";
-import phone from "./assets/phone.jpg";
-import headphone from "./assets/headphone.webp";
-import pad from "./assets/pad.webp";
-
-// function App() {
-//   const name = "React";
-
-//   return (
-//     <>
-//       <Header />
-//       <ProductCard name="手機 " price={43900} image={phone} />
-//       <ProductCard name="耳機 " price={6500} image={headphone} />
-//       <ProductCard name="平板 " price={12500} image={pad} />
-//       <Footer />
-//     </>
-//   );
-// }
+import ProductCard from "./components/ProductCard";
 
 function App() {
-  // const product = [
-  //   { id: 1, name: "手機", price: 43900, image: phone },
-  //   { id: 2, name: "耳機", price: 6900, image: headphone },
-  //   { id: 3, name: "平板", price: 12500, image: pad },
-  // ];
-
   const [products, setProducts] = useState([]);
-
-  // useEffect(() => {
-  //   fetch("https://dummyjson.com/products")
-  //     .then((res) => res.json())
-  //     .then((p) => setProducts(p.products));
-  // }, []);
-
-  const [searchText, setSearchText] = useState("");
-
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // const fetchProducts = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const res = await fetch("https://dummyjson.com/products");
-  //     const data = await res.json();
-  //     setProducts(data.products);
-  //     setLoading(false);
-  //   } catch (err) {
-  //     setError(err);
-  //     console.log(err);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const [category, setCategory] = useState("all");
+  const [query, setQuery] = useState("");
 
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      let url = "https://dummyjson.com/products";
-      if (category !== "all") {
-        url += `/category/${category}`;
-      }
-      const res = await fetch(url);
-      const data = await res.json();
-      setProducts(data.products);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const inputRef = useRef(null);
+  const lastQuery = useRef("");
 
   useEffect(() => {
+    let ignore = false;
+    const url =
+      category === "all"
+        ? "https://dummyjson.com/products"
+        : `https://dummyjson.com/products/category/${category}`;
+
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(url);
+        const data = await res.json();
+        if (ignore) return;
+        setProducts(data.products);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchProducts();
+
+    return () => {
+      ignore = true;
+    };
   }, [category]);
 
-  const shown = products.filter((p) => p.title.includes(searchText));
-
-  const ingputRef = useRef(null);
   useEffect(() => {
-    ingputRef.current.focus();
+    inputRef.current.focus();
   }, []);
+
+  const shown = products.filter((p) => p.title.includes(query));
+
   return (
-    <>
+    <div className="page">
       <Header />
-      {/* <RefDemo /> */}
-      <div
-        style={{
-          display: "flex",
-          gap: "8px",
-          alignItems: "center",
-          justifyContent: "right",
-        }}
-      >
-        <input
-          placeholder="搜尋商品名稱..."
-          onChange={(e) => setSearchText(e.target.value)}
-          value={searchText}
-          style={{ padding: "6px 12px", fontSize: "16px" }}
-        />
-        <button
-          onClick={() => setSearchText("")}
-          style={{ padding: "6px 12px", cursor: "pointer" }}
-        >
-          清除
-        </button>
+
+      <div className="toolbar">
+        <div className="categories">
+          <button
+            className={category === "all" ? "active" : ""}
+            onClick={() => setCategory("all")}
+          >
+            全部
+          </button>
+          <button
+            className={category === "smartphones" ? "active" : ""}
+            onClick={() => setCategory("smartphones")}
+          >
+            手機
+          </button>
+          <button
+            className={category === "laptops" ? "active" : ""}
+            onClick={() => setCategory("laptops")}
+          >
+            筆電
+          </button>
+        </div>
+
+        <div className="search">
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="搜尋商品"
+          />
+          <button
+            onClick={() => {
+              lastQuery.current = query;
+              setQuery("");
+            }}
+          >
+            清除
+          </button>
+          <button onClick={() => setQuery(lastQuery.current)}>回到上次</button>
+        </div>
       </div>
-      {loading && <p>讀取中</p>}
-      {error && <p>讀取失敗</p>}
-      <button onClick={() => setCategory("smartphones")}>手機分類</button>
-      <button onClick={() => setCategory("laptops")}>平板分類</button>
-      <button onClick={() => setCategory("all")}>全部商品</button>
 
-      {/* {shown.map((p) => (
-        <ProductCard
-          name={p.name}
-          price={p.price}
-          image={p.image[0]}
-          key={p.id} // 🌟 確保 key 是唯一的
-        />
-      ))} */}
+      {loading && <p className="message">載入中…</p>}
+      {error && <p className="message">載入失敗：{error.message}</p>}
+      {!loading && !error && shown.length === 0 && (
+        <p className="message">找不到符合的商品</p>
+      )}
 
-      {shown.map((p) => (
-        <ProductCard
-          name={p.title}
-          price={p.price}
-          image={p.images[0]}
-          key={p.id}
-        />
-      ))}
+      <main className="product-list">
+        {shown.map((p) => (
+          <ProductCard
+            key={p.id}
+            title={p.title}
+            price={p.price}
+            thumbnail={p.thumbnail}
+          />
+        ))}
+      </main>
 
-      {shown.length === 0 && <p>找不到該商品</p>}
       <Footer />
-    </>
+    </div>
   );
 }
 
