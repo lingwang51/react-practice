@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ProductCard from "../components/ProductCard";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 function Products() {
   const [products, setProducts] = useState([]);
@@ -15,6 +15,7 @@ function Products() {
   const lastQuery = useRef("");
 
   useEffect(() => {
+    document.title = "商品頁面";
     let ignore = false;
     const url =
       category === "all"
@@ -50,9 +51,6 @@ function Products() {
 
   return (
     <div className="page">
-      <Header />
-      <Link to="/">首頁</Link>
-
       <div className="toolbar">
         <div className="categories">
           <button
@@ -102,18 +100,17 @@ function Products() {
 
       <main className="product-list">
         {shown.map((p) => (
-          <Link to="/products/:id">
-            <ProductCard
-              key={p.id}
-              title={p.title}
-              price={p.price}
-              thumbnail={p.thumbnail}
-            />
-          </Link>
+          // <Link to={`/product/${p.id}`} key={p.id}>
+          <ProductCard
+            key={p.id}
+            title={p.title}
+            price={p.price}
+            thumbnail={p.thumbnail}
+            id={p.id}
+          />
+          // </Link>
         ))}
       </main>
-
-      <Footer />
     </div>
   );
 }

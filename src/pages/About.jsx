@@ -1,6 +1,9 @@
-import { Link } from "react-router-dom";
-
+import { Link } from "react-router";
+import { useEffect } from "react";
 const About = () => {
+  useEffect(() => {
+    document.title = "關於我們";
+  }, []);
   return (
     <div>
       <h2>關於</h2>
